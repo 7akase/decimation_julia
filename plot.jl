@@ -35,7 +35,7 @@ function sincMN(x, order = 1, n = 2, precision = [])
   for i = 1:order
     y = dtd_nbit(y, precision[i+order]);
   end
-  y = y / n;
+  y = y / n^order;
 end
   
 Nfft = 2^14;
@@ -48,10 +48,13 @@ ts = collect(0:Nfft-1);
 u = 0.9 * sinpi(2*fsig*ts);
 v = dsm1(u);
 
-order = 2;
-n = 32;
-precision = (1 + convert(Int, ceil(log2(n)))) * ones(order * 2);
-w = sincMN(v, order, n, 11*ones(order*2));
+order = 3;    # sinc filter order
+n = 64;       # decimation ratio
+
+# DTI keep monotonicity during Ts*(decimation_ratio)
+# which results in WL grows of log2(decimation_ratio) for each order.
+precision = (1 + order * convert(Int, ceil(log2(n)))) * ones(order * 2);
+w = sincMN(v, order, n, precision);
 
 plot(ts, u)
 plot(ts[1:n:end], w)
