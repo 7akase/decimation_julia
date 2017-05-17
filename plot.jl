@@ -1,23 +1,7 @@
 using PyPlot
 
-
-
-function dti_nbit(x, n)
-  y = zeros(x);
-  for i = 2:length(x)
-    y[i] = add_nbit(y[i-1], x[i], n);
-  end
-  y;
-end
-
-function dtd_nbit(x, n)
-  y = zeros(x);
-  y[1] = x[1];
-  for i = 2:length(x)
-    y[i] = add_nbit(x[i], -x[i-1], n);
-  end
-  y;
-end
+include("delsig.jl");
+include("decimation.jl");
 
 function sincMN(x, order = 1, n = 2, precision = [])
   if precision == []
@@ -41,6 +25,7 @@ end
 Nfft = 2^14;
 Ts = 1;
 fsig = 23 / Nfft;
+osr = 256;
 
 # ts = linspace(0, 2*pi, 100);
 
@@ -58,3 +43,6 @@ w = sincMN(v, order, n, precision);
 
 plot(ts, u)
 plot(ts[1:n:end], w)
+
+snr = getSNR(fft(v), osr, 24, 1);
+print(snr);

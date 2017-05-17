@@ -21,32 +21,28 @@ function add_nbit(a, b, n)
   y;
 end
 
-function dsm1(u)
-  v = zeros(u);
-  y = u[1];
-  for i = 2:length(u)
-    y = y + u[i] - v[i-1];
-    v[i] = sign(y);
-  end
-  v = convert(Array{Int}, v);
-end
-
-function dsm2(u)
-  v = zeros(u);
-  x = u[1];
-  y = 0;
-  for i = 2:length(u)
-    y = x - v[i-1] + y;
-    v[i] = sign(y);
-    x = u[i] - v[i] + x;
-  end
-  v = convert(Array{Int}, v);
-end
-
 @test add_nbit(1, 2, 32) == 3;
 @test add_nbit(126, 1, 8) == 127;
 @test add_nbit(127, 1, 8) == -128;
 @test add_nbit(-128, -1, 8) == 127;
 @test add_nbit(9999, -1, 8) == 0 || true;
 @test add_nbit(-9999, -1, 8) == 0 || true;
+
+function dti_nbit(x, n)
+  y = zeros(x);
+  for i = 2:length(x)
+    y[i] = add_nbit(y[i-1], x[i], n);
+  end
+  y;
+end
+
+function dtd_nbit(x, n)
+  y = zeros(x);
+  y[1] = x[1];
+  for i = 2:length(x)
+    y[i] = add_nbit(x[i], -x[i-1], n);
+  end
+  y;
+end
+
 
