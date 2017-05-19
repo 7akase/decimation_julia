@@ -1,8 +1,10 @@
 module Reg
 
-import Base: +, show, length, convert
+import Base: +, show, length, convert, zero, zeros
 
-export RegVar, Reg8, +, ++
+export RegVar, Reg8
+export convert, zero, zeros, +
+export ++
 
 abstract AbstractReg <: Integer;
 
@@ -26,24 +28,23 @@ function Base.convert(Int, a::RegVar)
   end
 end
 
-Base.convert(Int, a ::Reg8) = Base.convert(Int, RegVar(a.val, 8));
+Base.convert(::Type{Reg8}, a::Reg8) = a; 
+Base.convert(::Type{RegVar}, a::RegVar) = a; 
+Base.convert(::Type{Reg8}, a::RegVar) = Reg8((1 << 8 - 1) & a.val);
+Base.convert(::Type{Int}, a ::Reg8) = Base.convert(Int, RegVar(a.val, 8));
 
 
 length(a :: RegVar) = a.wl;
 length(a :: Reg8) = 8;
 
 
++(a::RegVar, b::RegVar) = addreg(a, b, max(a.wl, b.wl));
++(a::RegVar, b::RegVar, n::Int) = addreg(a, b, n);
 +(a :: Reg8, b :: Reg8) = addreg(a, b, 8);
-++(args...) = assoc(args);
-
-assoc(a :: RegVar, b :: RegVar) = RegVar(a.val << b.wl + b.val, a.wl + b.wl);
-assoc(a :: RegVar, args...) = assoc(a, assoc(args));
-assoc(x :: Tuple{Any, Vararg{Any}}) = assoc(x...);
-
 addreg(a::Reg8, b::Reg8) = addreg(a, b, 8);
 addreg(a::Reg8, b::Reg8, n::Int) = addreg(a, b, n);
 
-function addreg(a :: Reg8, b :: Reg8, n :: Int)
+function addreg(a::RegVar, b::RegVar, n::Int)
   ub = 2^(n-1)-1;
   lb = -2^(n-1);
   y = a.val + b.val;
@@ -54,12 +55,15 @@ function addreg(a :: Reg8, b :: Reg8, n :: Int)
     y = y - 2^n;
   end
 
-  if n == 8
-    Reg8(y);
-  else
-    RegVar(y, n);
-  end
+  RegVar(y, n);
 end
+
+
+++(args...) = assoc(args);
+assoc(x :: Tuple{Any, Vararg{Any}}) = assoc(x...);
+assoc(a :: RegVar, b :: RegVar) = RegVar(a.val << b.wl + b.val, a.wl + b.wl);
+assoc(a :: RegVar, args...) = assoc(a, assoc(args));
+
 
 function show(io::IO, a :: RegVar)
   mroundup(x, n) = Int(ceil(x / n)) * n;
@@ -89,6 +93,14 @@ function show(io::IO, x :: Reg8)
     end
   end
 end
+
+zero(Reg8) = Reg8(0);
+zero(::Type{Reg8}) = Reg8(0);
+zeros(Reg8, n::Int) = fill!(Array{Reg8}(n), Reg8(0));
+zeros(x::Array{Reg8,1}) = zeros(Reg8, length(x));
+
+zeros(z::RegVar, n::Int) = fill!(Array{RegVar}(n), RegVar(0, z.wl));
+zeros(x::Array{RegVar,1}) = zeros(RegVar(0, x[1].wl), length(x));
 
 end # module
 
