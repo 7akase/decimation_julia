@@ -97,11 +97,14 @@ end
 -(a::Reg8) = Reg8((1 << 8) - a.val); 
 -(a::Reg8, b::Reg8) = a + (-b);
 
-# ++(args...) = assoc(args);
-# assoc(x :: Tuple{Any, Vararg{Any}}) = assoc(x...);
-# assoc(a :: RegVar, b :: RegVar) = RegVar(a.val << b.wl + b.val, a.wl + b.wl);
-# assoc(a :: RegVar, args...) = assoc(a, assoc(args));
-
+++(args...) = assoc(args);
+assoc(x::Tuple{Any, Vararg{Any}}) = assoc(x...)
+assoc(a::RegVar, args...) = assoc(a, assoc(args))
+assoc(a::Reg8, args...) = assoc(a, assoc(args))
+assoc(a::RegVar, b::RegVar) = RegVar(a.val << b.wl + b.val, a.wl + b.wl)
+assoc(a::RegVar, b::Reg8  ) = RegVar(a.val << 8    + b.val, a.wl + 8   )
+assoc(a::Reg8  , b::RegVar) = assoc(RegVar(a.val, 8), b) 
+assoc(a::Reg8  , b::Reg8  ) = assoc(RegVar(a.val, 8), RegVar(b.val, 8)) 
 
 end # module
 
