@@ -65,10 +65,9 @@ zeros(z::RegVar, n::Int) = fill!(Array{RegVar}(n), RegVar(0, z.wl));
 zeros(x::Array{RegVar,1}) = zeros(RegVar(0, x[1].wl), length(x));
 
 # arithmetics
-+(a::Reg8, b::Reg8) = addreg8(a, b)
-
-function addreg8(a::Reg8, b::Reg8)
-  n = 8
++(a::AbstractReg, b::AbstractReg) = addreg(a, b)
+function addreg(a::AbstractReg, b::AbstractReg)
+  n = max(wl(a), wl(b)); 
   ub = 2^(n-1)-1
   lb = -2^(n-1)
   y = a.val + b.val
@@ -79,7 +78,7 @@ function addreg8(a::Reg8, b::Reg8)
     y = y - 2^n
   end
 
-  Reg8(y)
+  RegVar(y, n)
 end
 
 -(a::Reg8) = Reg8((1 << 8) - a.val); 
