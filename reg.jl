@@ -81,8 +81,8 @@ function addreg(a::AbstractReg, b::AbstractReg)
   RegVar(y, n)
 end
 
--(a::Reg8) = Reg8((1 << 8) - a.val); 
--(a::Reg8, b::Reg8) = a + (-b);
+-(x::AbstractReg) = RegVar((1 << wl(x)) - x.val, wl(x))
+-(a::AbstractReg, b::AbstractReg) = a + (-b)
 
 ++(args...) = assoc(args);
 assoc(x::Tuple{Any, Vararg{Any}}) = assoc(x...)
