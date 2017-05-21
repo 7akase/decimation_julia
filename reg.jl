@@ -7,7 +7,7 @@ export convert, show, ==, +, -, zero, zeros
 export ++
 
 # type definition
-abstract AbstractReg;
+abstract AbstractReg
 
 type RegVar <: AbstractReg
   val :: UInt
@@ -19,27 +19,29 @@ type Reg8 <: AbstractReg
 end
 
 # convert
-Base.convert(t::RegVar, a::RegVar) = RegVar((1 << t.wl - 1) & a.val, t.wl)
-Base.convert(::Type{Reg8}, a::RegVar) = Reg8((1 << 8 - 1) & a.val);
-Base.convert(::Type{Int}, a ::Reg8) = Base.convert(Int, RegVar(a.val, 8));
-function Base.convert(Int, a::RegVar)
-  wl = Int(log2(typemax(Int))) + 1;
-  s = UInt(1) << (a.wl - 1);
-  if (s & a.val == 0)
-    Int(a.val);
+wl(::Reg8) = 8
+wl(x::RegVar) = x.wl
+
+Base.convert(::Type{Reg8}, x::AbstractReg) = RegVar((1 << 8 - 1) & x.val, 8)
+Base.convert(t::AbstractReg, x::AbstractReg) = RegVar((1 << wl(t) - 1) & x.val, wl(t))
+function Base.convert(Int, x::AbstractReg)
+  w = Int(log2(typemax(Int))) + 1;
+  s = UInt(1) << (w - 1);
+  if (s & x.val == 0)
+    Int(x.val);
   else
-    -1 * Int((1 << a.wl) - a.val);
+    -1 * Int((1 << w) - a.val);
   end
 end
 
 # basic functions
-function show(io::IO, a :: RegVar)
+function show(io::IO, x::AbstractReg)
   mroundup(x, n) = Int(ceil(x / n)) * n;
-  print(io, a.wl);
+  print(io, wl(x));
   print(io, "'h");
   octmask = 1 << 4 -1;
-  for i=mroundup(a.wl, 4)-4:-4:0
-    z = octmask & (a.val >> i);
+  for i=mroundup(wl(x), 4)-4:-4:0
+    z = octmask & (x.val >> i);
     if z < 10
       print(io, z);
     else
@@ -48,26 +50,11 @@ function show(io::IO, a :: RegVar)
   end
 end
 
-function show(io::IO, x :: Reg8)
-  print(io, "8'h");
-  mask = 1 << 4 -1;
-  for i=(8-4):-4:0
-    z = mask & (x.val >> i);
-    if z < 10
-      print(io, z);
-    else
-      print(io, 'a'+ (z-10));
-    end
-  end
-end
-
-==(a::Reg8, b::Reg8) = a.val == b.val
-==(a::RegVar, b::RegVar) = (a.val == b.val) && (a.wl == b.wl)
+==(a::AbstractReg, b::AbstractReg) = (a.val == b.val) && (wl(a) == wl(b))
 
 # basic
 
-length(a :: RegVar) = a.wl;
-length(a :: Reg8) = 8;
+length(a::AbstractReg) = wl(a);
 
 zero(Reg8) = Reg8(0);
 zero(::Type{Reg8}) = Reg8(0);
@@ -78,7 +65,7 @@ zeros(z::RegVar, n::Int) = fill!(Array{RegVar}(n), RegVar(0, z.wl));
 zeros(x::Array{RegVar,1}) = zeros(RegVar(0, x[1].wl), length(x));
 
 # arithmetics
-+(a :: Reg8, b :: Reg8) = addreg8(a, b)
++(a::Reg8, b::Reg8) = addreg8(a, b)
 
 function addreg8(a::Reg8, b::Reg8)
   n = 8
