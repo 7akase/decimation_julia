@@ -19,6 +19,7 @@ type Reg8 <: AbstractReg
 end
 
 # convert
+Base.convert(t::RegVar, a::RegVar) = RegVar((1 << t.wl - 1) & a.val, t.wl)
 Base.convert(::Type{Reg8}, a::RegVar) = Reg8((1 << 8 - 1) & a.val);
 Base.convert(::Type{Int}, a ::Reg8) = Base.convert(Int, RegVar(a.val, 8));
 function Base.convert(Int, a::RegVar)
